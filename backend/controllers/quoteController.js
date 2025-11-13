@@ -10,21 +10,25 @@ export const getQuote = async (req, res, next) => {
 
     const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ message: "Alpha Vantage API key is missing." });
+      return res.status(500).json({ message: "Alpha Vantage API key is not configured." });
     }
 
     const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`;
     const { data } = await axios.get(url);
 
-    // find the time series key, even if formatting changes
+    // robust: detect ANY time series key
     const seriesKey = Object.keys(data).find(k =>
-      k.toLowerCase().includes("time series")
+      /time\s*series/i.test(k)
     );
 
     const series = seriesKey ? data[seriesKey] : null;
 
     if (!series) {
-      return res.status(404).json({ message: "No data returned for the provided symbol." });
+      console.log("Alpha Keys:", Object.keys(data));
+      return res.status(404).json({
+        message: "No time series data found in Alpha Vantage response.",
+        receivedKeys: Object.keys(data)
+      });
     }
 
     const entries = Object.entries(series);
@@ -40,10 +44,12 @@ export const getQuote = async (req, res, next) => {
       close: parseFloat(latestStats["4. close"]),
       previousClose: previousStats ? parseFloat(previousStats["4. close"]) : null,
       volume: parseInt(latestStats["5. volume"]),
-      fetchedAt: new Date().toISOString(),
+      fetchedAt: new Date().toISOString()
     });
+
   } catch (error) {
     console.error("Error fetching quote:", error.message);
     next(error);
   }
 };
+

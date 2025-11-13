@@ -9,6 +9,8 @@ import connectDB from './config/db.js'
 import quoteRoutes from './routes/quoteRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 import portfolioRoutes from './routes/portfolioRoutes.js'
+import priceHistoryRoutes from './routes/priceHistoryRoutes.js'
+import { startDailyPriceCron } from './jobs/dailyPriceJob.js'
 
 import errorHandler from './middleware/errorHandler.js'
 
@@ -32,6 +34,9 @@ app.use(
     credentials: true,
   })
 )
+
+startDailyPriceCron() // Start the daily price fetching job
+
 app.use(express.json({ limit: '1mb' }))
 app.use(morgan('dev'))
 
@@ -47,6 +52,9 @@ app.use('/api/auth', authRoutes)
 
 // Portfolio CRUD (protected)
 app.use('/api/portfolio', portfolioRoutes)
+
+// Price History
+app.use('/api/price-history', priceHistoryRoutes)
 
 // Health Check
 app.get('/api/health', (req, res) => {

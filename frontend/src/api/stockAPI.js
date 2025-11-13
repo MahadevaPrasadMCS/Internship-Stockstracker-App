@@ -1,59 +1,73 @@
-import axios from 'axios'
+import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-// In-memory cache to prevent redundant requests
-const cache = new Map()
-const CACHE_TTL = 60 * 1000 // 1 minute
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_TTL = 60 * 1000; // 1 minute
+
+/** Normalize number or return null */
+const num = (v) => (typeof v === "number" && !isNaN(v) ? v : null);
 
 /**
- * Fetch current stock quote from backend (Alpha Vantage-powered)
- * Normalizes all data to a consistent frontend structure.
+ * Fetch current stock quote from backend
+ *  → Backend returns MarketStack EOD latest fields
+ *  → Normalized into consistent price object
  */
 export async function fetchQuote(symbol) {
-  const cleanSymbol = symbol.toUpperCase().trim()
+  if (!symbol || typeof symbol !== "string") {
+    console.warn("⚠️ Invalid symbol passed to fetchQuote:", symbol);
+    return null;
+  }
 
-  // Return cached data if valid
-  const cached = cache.get(cleanSymbol)
+  const cleanSymbol = symbol.trim().toUpperCase();
+
+  /* ---------------------------
+     Cache Check
+  --------------------------- */
+  const cached = cache.get(cleanSymbol);
   if (cached && Date.now() - cached.time < CACHE_TTL) {
-    return cached.data
+    return cached.data;
   }
 
   try {
-    const { data } = await axios.get(`${API_BASE}/quote?symbol=${cleanSymbol}`)
+    const { data } = await axios.get(`${API_BASE}/quote?symbol=${cleanSymbol}`);
 
-    if (!data || !data.close) {
-      console.warn(`⚠️ No valid data returned for symbol: ${cleanSymbol}`)
-      return { symbol: cleanSymbol, currentPrice: null }
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid API response");
     }
 
-    // Normalize Alpha Vantage response to match UI expectations
+    const close = num(data.close);
     const normalized = {
-      symbol: data.symbol || cleanSymbol,
-      currentPrice: Number(data.close) || null,
-      open: Number(data.open) || 0,
-      high: Number(data.high) || 0,
-      low: Number(data.low) || 0,
-      previousClose: Number(data.previousClose || data.close) || 0,
+      symbol: cleanSymbol,
+      currentPrice: close,
+      open: num(data.open),
+      high: num(data.high),
+      low: num(data.low),
+      previousClose: close,
       fetchedAt: data.fetchedAt || new Date().toISOString(),
-      source: data.source || 'alphavantage',
-    }
+      currency: data.currency || "USD",
+      source: "marketstack",
+    };
 
-    // Cache result
-    cache.set(cleanSymbol, { data: normalized, time: Date.now() })
-    return normalized
+    cache.set(cleanSymbol, { data: normalized, time: Date.now() });
+
+    return normalized;
   } catch (error) {
-    console.warn(`⚠️ Failed to fetch quote for ${cleanSymbol}:`, error.message)
+    console.warn(`⚠️ Quote fetch failed for ${cleanSymbol}:`, error.message);
 
+    // Fallback to safe, empty structure
     return {
       symbol: cleanSymbol,
       currentPrice: null,
-      open: 0,
-      high: 0,
-      low: 0,
-      previousClose: 0,
+      open: null,
+      high: null,
+      low: null,
+      previousClose: null,
       fetchedAt: new Date().toISOString(),
-      source: 'fallback',
-    }
+      currency: "USD",
+      source: "fallback",
+    };
   }
 }

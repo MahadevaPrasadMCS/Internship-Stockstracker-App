@@ -39,7 +39,10 @@ export default function AddStockModal({ isOpen, onClose, onAdd }) {
     }
 
     let cleanSymbol = symbol.toUpperCase().trim()
-    if (!cleanSymbol.endsWith('.BSE')) cleanSymbol += '.BSE'
+    if (!cleanSymbol.endsWith('.BO') && !cleanSymbol.endsWith('.NS')) {
+      cleanSymbol += '.BO'; // default BSE exchange
+    }
+
 
     const newItem = {
       id: uuidv4(),

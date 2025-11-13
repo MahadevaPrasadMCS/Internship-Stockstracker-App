@@ -120,7 +120,12 @@ stocktracker/
 ---
 ---
 
-## ⚙️ Installation Guide
+## Installation Guide
+
+### Live Demo
+```url
+https://yourstocktracker.netlify.app
+```
 
 ### Clone the project
 

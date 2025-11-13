@@ -1,99 +1,99 @@
-import React from "react";
-import { LogOut, Menu } from "lucide-react";
+import React, { useState } from "react";
+import { LogOut, Menu, Bell, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function Topbar({ onToggle, title = "Dashboard" }) {
+export default function Topbar({
+  onToggle,
+  title = "Dashboard",
+  notifications = [],
+  onClearNotifications,
+}) {
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  const showToast = (msg) => {
-    const toast = document.createElement("div");
-    toast.textContent = msg;
-    toast.className =
-      "fixed bottom-6 right-6 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow-lg text-sm font-medium animate-slideInRight z-[2000]";
-    document.body.appendChild(toast);
-
-    setTimeout(() => toast.remove(), 2200);
-  };
+  const unread = notifications.length;
 
   const handleLogout = () => {
     localStorage.removeItem("stocktrackr_token");
-    localStorage.removeItem("shouldFetchPrices");
-    showToast("👋 Logged out successfully");
-
-    setTimeout(() => navigate("/login", { replace: true }), 600);
+    navigate("/login", { replace: true });
   };
 
   return (
-    <header
-      className="
-        sticky top-0 z-40
-        flex items-center justify-between
-        px-4 py-3
-        bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10
-        backdrop-blur-xl
-        border-b border-gray-200 dark:border-gray-700
-        shadow-sm
-      "
-    >
-      {/* Left Section */}
+    <header className="flex items-center justify-between px-4 py-3 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 shadow-sm relative">
+      
+      {/* Left */}
       <div className="flex items-center gap-4">
-        {/* Sidebar Toggle */}
-        <button
-          onClick={onToggle}
-          aria-label="Toggle sidebar"
-          className="
-            p-2 rounded-lg 
-            hover:bg-gray-100 dark:hover:bg-gray-800 
-            transition active:scale-95
-          "
-        >
-          <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+        <button onClick={onToggle} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Menu className="h-6 w-6" />
         </button>
-
-        {/* Dynamic Page Title */}
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-800 dark:text-gray-100">
-          {title}
-        </h1>
+        <h1 className="text-xl font-semibold">{title}</h1>
       </div>
 
-      {/* Right Section */}
-      <div className="flex items-center gap-4">
-        {/* Avatar */}
-        <div className="flex items-center gap-3 pr-1">
-          <div
-            className="
-              h-9 w-9 rounded-full 
-              bg-gradient-to-br from-indigo-500 to-purple-600
-              flex items-center justify-center
-              text-white font-semibold shadow
-            "
-          >
-            P
-          </div>
+      {/* Right */}
+      <div className="flex items-center gap-4 relative">
 
-          {/* Name (Hidden on mobile for clean layout) */}
-          <div className="hidden sm:flex flex-col leading-tight">
-            <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
-              Prasad
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Investor
-            </span>
-          </div>
-        </div>
-
-        {/* Logout Button */}
+        {/* Notification Bell */}
         <button
-          aria-label="Logout"
-          onClick={handleLogout}
-          className="
-            p-2 rounded-lg 
-            hover:bg-gray-100 dark:hover:bg-gray-800
-            transition active:scale-95
-          "
+          onClick={() => setOpen(!open)}
+          className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
         >
-          <LogOut className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          <Bell className="h-5 w-5" />
+          
+          {unread > 0 && (
+            <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-red-500 rounded-full animate-pulse"></span>
+          )}
         </button>
+
+        {/* Logout */}
+        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+          <LogOut className="h-5 w-5" />
+        </button>
+
+        {/* Notification Dropdown */}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="absolute right-0 top-12 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-[200]"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-sm font-semibold">Notifications</h3>
+
+                {unread > 0 && (
+                  <button
+                    onClick={onClearNotifications}
+                    className="text-xs text-red-500 hover:underline"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+
+              {unread === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
+                  No alerts yet
+                </p>
+              )}
+
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                  >
+                    <p className="text-xs font-medium">{n.symbol}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{n.message}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{n.time}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </header>
   );

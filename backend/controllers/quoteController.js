@@ -24,6 +24,7 @@ export const getQuote = async (req, res, next) => {
     const series = seriesKey ? data[seriesKey] : null;
 
     if (!series) {
+      console.log("FULL ALPHA RESPONSE:", data);
       console.log("Alpha Keys:", Object.keys(data));
       return res.status(404).json({
         message: "No time series data found in Alpha Vantage response.",

@@ -1,62 +1,76 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from "react";
 import {
   Routes,
   Route,
   Navigate,
   useLocation,
   useNavigate,
-} from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+} from "react-router-dom";
 
-import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import Portfolio from './pages/Portfolio'
-import Settings from './pages/Settings'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ProtectedRoute from './components/ProtectedRoute'
+import { AnimatePresence, motion } from "framer-motion";
 
-// Page fade transition
+import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
+import Portfolio from "./pages/Portfolio";
+import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+/* ---------------------------------------
+   Page Transition (cleaner + smoother)
+---------------------------------------- */
 const PageTransition = ({ children }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
+    initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    transition={{ duration: 0.25, ease: 'easeOut' }}
+    exit={{ opacity: 0, y: -12 }}
+    transition={{
+      duration: 0.28,
+      ease: [0.22, 1, 0.36, 1], // smoother cubic curve
+    }}
     className="min-h-screen"
   >
     {children}
   </motion.div>
-)
+);
 
-// Scroll to top on route change
+/* ---------------------------------------
+   Auto-scroll to top on route change
+---------------------------------------- */
 const ScrollToTop = () => {
-  const { pathname } = useLocation()
+  const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
-  return null
-}
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [pathname]);
+  return null;
+};
 
 export default function App() {
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Auto-redirect if token exists and user hits /login or /register
+  /* ---------------------------------------
+     Auto-redirect logged-in users away
+     from /login and /register 
+  ---------------------------------------- */
   useEffect(() => {
-    const token = localStorage.getItem('stocktrackr_token')
-    const publicRoutes = ['/login', '/register']
+    const token = localStorage.getItem("stocktrackr_token");
+
+    const publicRoutes = ["/login", "/register"];
     if (token && publicRoutes.includes(location.pathname)) {
-      navigate('/dashboard', { replace: true })
+      navigate("/dashboard", { replace: true });
     }
-  }, [location.pathname, navigate])
+  }, [location.pathname, navigate]);
 
   return (
     <>
       <ScrollToTop />
-      <AnimatePresence mode="wait">
+
+      {/* Smooth animated route transitions */}
+      <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
-          {/* Public Routes */}
+          {/* ---------- AUTH PAGES ---------- */}
           <Route
             path="/login"
             element={
@@ -65,6 +79,7 @@ export default function App() {
               </PageTransition>
             }
           />
+
           <Route
             path="/register"
             element={
@@ -74,7 +89,7 @@ export default function App() {
             }
           />
 
-          {/* Protected Layout */}
+          {/* ---------- PROTECTED ROUTES ---------- */}
           <Route
             path="/"
             element={
@@ -83,10 +98,9 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route
-              index
-              element={<Navigate to="/dashboard" replace />}
-            />
+            {/* Redirect root → dashboard */}
+            <Route index element={<Navigate to="/dashboard" replace />} />
+
             <Route
               path="dashboard"
               element={
@@ -95,6 +109,7 @@ export default function App() {
                 </PageTransition>
               }
             />
+
             <Route
               path="portfolio"
               element={
@@ -103,6 +118,7 @@ export default function App() {
                 </PageTransition>
               }
             />
+
             <Route
               path="settings"
               element={
@@ -113,10 +129,10 @@ export default function App() {
             />
           </Route>
 
-          {/* Fallback */}
+          {/* ---------- FALLBACK ---------- */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AnimatePresence>
     </>
-  )
+  );
 }

@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* --- Global Layout Styles fro web --- */
+/* -----------------------------------------------------
+   GLOBAL ROOT / THEME
+----------------------------------------------------- */
 html,
 body,
 #root {
@@ -11,26 +13,30 @@ body,
   @apply antialiased;
 }
 
-/* --- Global Theme Setup --- */
 body {
-  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100
+         transition-colors duration-300;
 }
 
-/* --- Smooth Sidebar & Layout Transitions --- */
+/* -----------------------------------------------------
+   LAYOUT TRANSITIONS (Sidebar / Content)
+----------------------------------------------------- */
 .transition-width {
   transition-property: width, max-width;
   transition-duration: 250ms;
   transition-timing-function: ease-in-out;
 }
 
-/* --- Custom Scrollbar --- */
+/* -----------------------------------------------------
+   CUSTOM SCROLLBAR
+----------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full transition-colors;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -41,7 +47,11 @@ body {
   @apply bg-gray-100 dark:bg-gray-800;
 }
 
-/* --- Fade Animations --- */
+/* -----------------------------------------------------
+   ANIMATIONS
+----------------------------------------------------- */
+
+/* Fade-in Up */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -52,12 +62,11 @@ body {
     transform: translateY(0);
   }
 }
-
 .animate-fadeIn {
   animation: fadeInUp 0.25s ease-out;
 }
 
-/* --- Toast Notification Animation --- */
+/* Slide-in (Toast) */
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -68,14 +77,38 @@ body {
     transform: translateX(0);
   }
 }
-
 .animate-slideInRight {
   animation: slideInRight 0.3s ease-out;
 }
 
-/* --- Button Glow Hover (Optional) --- */
+/* -----------------------------------------------------
+   BUTTON & CARD ENHANCEMENTS
+----------------------------------------------------- */
+
+/* Subtle glow on hover */
 .btn-glow:hover {
-  box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 0 10px rgba(79, 70, 229, 0.35);
   transform: translateY(-1px);
   transition: all 0.2s ease-in-out;
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* -----------------------------------------------------
+   CHART / WIDGET UTILS
+----------------------------------------------------- */
+.chart-box {
+  @apply bg-white/5 dark:bg-gray-800/40 border border-gray-700
+         rounded-lg p-3;
+}
+
+.chart-title {
+  @apply text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2;
 }

@@ -1,91 +1,115 @@
-# StockTracker
+# StockTracker — US Stock Portfolio Tracker
 
-A full-stack portfolio tracking system for BSE (Bombay Stock Exchange) stocks.  
-Provides authentication, portfolio CRUD, real-time price fetching, caching, and analytics.
+A full-stack **premium US stock portfolio manager** with real-time prices, historical analytics, performance tracking, smart alerts, authentication, cron-based daily history storage, and a stunning modern UI.
 
 ---
 
 ## Features
 
-### Core Functionality
-- User registration and login using JWT authentication
-- Protected backend routes accessible only with valid tokens
-- Add stocks to personal BSE portfolio
-- Edit existing stocks with validation
-- Delete stocks from portfolio
-- Real-time stock price retrieval using Alpha Vantage API
-- Automatic price merging with saved portfolio data
+### Authentication  
+- Secure JWT-based login & registration  
+- Protected routes with auto-session expiry  
+- Token injection through Axios interceptor  
 
-### Frontend System
-- React-based UI with modular components
-- Dynamic routing using React Router
-- Data fetching, caching, and stale-time handling through React Query
-- Custom hook for live stock prices with client-side caching
-- Loading indicators, error handling, and notifications
-- Optimized rendering using Framer Motion animations
-- Fully responsive layout with Tailwind CSS design system
+### Portfolio Management  
+- Add / Edit / Delete US stocks  
+- Clean validation for symbols like `AAPL`, `MSFT`, `BRK.B`, etc.  
+- Computes investment, current value & P/L  
+- Auto-merges live stock prices with saved portfolio  
 
-### Backend System
-- Node.js and Express backend architecture
-- MongoDB database with Mongoose models
-- Secure password hashing using bcrypt
-- Centralized error handling middleware
-- Modular controllers and routes for clean architecture
-- API rate protection using smart frontend caching
-- Clean portfolio CRUD operations tied to authenticated users
+### Real-Time Stock Prices  
+- MarketStack API integration  
+- Intelligent caching (60s TTL)  
+- OHLC support (Open, High, Low, Close)  
+- Works even when API rate-limit hits (fallback data provided)
 
-### Quality and Developer Experience
-- Clearly structured folder hierarchy
-- Environment-variable driven configuration
-- Minimal API calls through caching and stable-symbol logic
-- Consistent coding style across frontend and backend
-- Easy to deploy, extend, and integrate
+### Historical Price Tracking  
+- Backend stores daily snapshots using **cron jobs**  
+- API: `/api/history/:symbol`  
+- Beautiful charts with supported ranges:
+  - **1D • 5D • 1M • 3M • 1Y • ALL**
+- Buy-price comparison line  
+- Includes portfolio-wide performance mode  
 
+### Smart Price Alerts  
+- Monitors % movement for each stock  
+- Cooldown system to prevent spam  
+- Uses a custom React hook: `usePriceAlerts`  
+- Bell icon ready for notifications UI  
+
+### Premium Modern UI  
+- Glassmorphism UI with blur panels  
+- Framer Motion animations  
+- Gradient highlights  
+- Dark/Light theme support  
+- Responsive grid layout  
+- Floating toast notifications  
+
+### Analytics Dashboard  
+- Allocation pie chart  
+- Performance chart  
+- Transaction placeholder for future logs  
+- Summary widget with net P/L, returns % etc.
+
+### Backend Highlights  
+- Clean Express.js architecture  
+- MongoDB (Mongoose ODM)  
+- MarketStack quote handler with graceful fallback  
+- Daily historical data recording via `node-cron`  
+- Centralized error handling  
+- Token middleware  
 
 ---
 
 ## Tech Stack
 
-### Frontend
+### **Frontend**
 - React  
 - React Router  
 - React Query  
 - Tailwind CSS  
+- Recharts  
 - Axios  
 - Framer Motion  
+- Lucide Icons  
 
-### Backend
+### **Backend**
 - Node.js  
 - Express  
 - MongoDB (Mongoose)  
-- JWT  
-- Alpha Vantage API  
+- JWT Auth  
+- MarketStack API  
+- node-cron  
+- dotenv  
 
 ---
 
 ## Project Structure
+
 ```
-stocktrackr/
+stocktracker/
 │
 ├── backend/
 │ ├── config/
 │ ├── controllers/
-│ ├── middleware/
-│ ├── models/
 │ ├── routes/
+│ ├── models/
+│ ├── middleware/
+│ ├── cron/
+│ ├── utils/
 │ └── server.js
 │
 └── frontend/
-├── public/
-└── src/
-├── api/
-├── components/
-├── hooks/
-├── pages/
-├── utils/
-├── App.jsx
-├── main.jsx
-└── index.css
+├── src/
+│ ├── api/
+│ ├── components/
+│ ├── hooks/
+│ ├── pages/
+│ ├── contexts/
+│ ├── utils/
+│ ├── App.jsx
+│ ├── main.jsx
+│ └── index.css
 ```
 ---
 
@@ -94,9 +118,15 @@ stocktrackr/
 - MongoDB Atlas or Local MongoDB
 - Alpha Vantage API key
 ---
-## Installation
+---
+
+## ⚙️ Installation Guide
+
+### Clone the project
+
 ```bash
-git clone
+git clone https://github.com/MahadevaPrasadMCS/Internship-Stockstracker-App.git
+cd Internship-Stockstracker-App
 ```
 ### Backend
 
@@ -104,8 +134,10 @@ git clone
 cd backend
 npm install
 npm run dev
-
-cd stocktracker
+```
+### Frontend
+```bash
+cd frontend
 npm install
 npm run dev
 ```
@@ -118,7 +150,7 @@ npm run dev
 PORT=5000
 MONGO_URI=your_mongo_url
 JWT_SECRET=your_secret
-ALPHA_VANTAGE_API_KEY=your_key
+MASTARSTACK_KEY=your_key
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
@@ -129,34 +161,41 @@ VITE_API_BASE_URL=http://localhost:5000/api
 ---
 # API Endpoints
 
-## Authentication
+### Authentication
 
-| Method | Endpoint                  | Description            |
-|--------|----------------------------|------------------------|
-| POST   | `"/api/auth/register"`    | Register a user        |
-| POST   | `"/api/auth/login"`       | Login and get token    |
-| GET    | `"/api/auth/profile"`     | Get authenticated user |
-
----
-
-## Portfolio
-
-| Method | Endpoint                     | Description      |
-|--------|-------------------------------|------------------|
-| GET    | `"/api/portfolio"`           | Fetch portfolio  |
-| POST   | `"/api/portfolio"`           | Add stock        |
-| PUT    | `"/api/portfolio/:id"`       | Update stock     |
-| DELETE | `"/api/portfolio/:id"`       | Delete stock     |
+| Method | Endpoint              | Description          |
+|--------|------------------------|----------------------|
+| POST   | `/api/auth/register`  | Create user          |
+| POST   | `/api/auth/login`     | Login user           |
+| GET    | `/api/auth/profile`   | Get logged-in user   |
 
 ---
 
-## Price Quote
+### Portfolio
 
-| Method | Endpoint                               | Description       |
-|--------|-------------------------------------------|-------------------|
-| GET    | `"/api/quote?symbol=XYZ.BSE"`           | Fetch stock price |
+| Method | Endpoint                | Description      |
+|--------|--------------------------|------------------|
+| GET    | `/api/portfolio`         | Get all stocks   |
+| POST   | `/api/portfolio`         | Add stock        |
+| PUT    | `/api/portfolio/:id`     | Update stock     |
+| DELETE | `/api/portfolio/:id`     | Delete stock     |
 
 ---
+### Stock Quote
+
+| Method | Endpoint                        | Description           |
+|--------|----------------------------------|-----------------------|
+| GET    | `/api/quote?symbol=AAPL`         | Fetch real-time price |
+
+---
+
+### Historical Price API
+
+| Method | Endpoint                 | Description                   |
+|--------|---------------------------|-------------------------------|
+| GET    | `/api/history/AAPL`      | Fetch saved daily price data |
+
+
 ## Limitations
 
 - Alpha Vantage free tier allows only 25 requests per day.
@@ -164,24 +203,21 @@ VITE_API_BASE_URL=http://localhost:5000/api
 - Only BSE (.BSE) symbols are supported in this version.
   
 ---
-## Future Enhancements
-
-- Add charts for historical price movements
-- Add export/import of portfolio data
-- Add UI theme customizations
-- Add BSE + NSE dual support
-- Add notifications for price alerts
----
 ## Screenshots
 
-### Portfolio
-<img width="1911" alt="Portfolio Screenshot" src="https://github.com/user-attachments/assets/13a579a2-9c28-4ac7-9972-f1ee5cfa68c1" />
-
 ### Dashboard
-<img width="1901" alt="Dashboard Screenshot" src="https://github.com/user-attachments/assets/e6a5f29d-f1fb-4076-8bf6-9094fd978127" />
+<img width="1919" alt="Dashboard Page Image" src="https://github.com/user-attachments/assets/9ea1b3a2-ac57-463d-abd1-1de893cabc6d" />
+
+### Portfolio
+<img width="1919"  alt="Portfolio Page Image" src="https://github.com/user-attachments/assets/90d3a3ae-0bbe-4128-8ed2-1cc7efe330ff" />
+
+<img width="1919" alt="Portfolio Page Image" src="https://github.com/user-attachments/assets/580bb7c2-9931-4469-8221-8811083073d0" />
+
+### Settings
+<img width="1889" alt="Settings Page Image" src="https://github.com/user-attachments/assets/b13d71e9-c9e2-448e-817a-3f69d6e09e91" />
 
 ### Register
-<img width="1911" alt="Register Page Screenshot" src="https://github.com/user-attachments/assets/3616d723-71b5-426a-89d9-9a241f42a35f" />
+<img width="1919" alt="register Page Image" src="https://github.com/user-attachments/assets/01ae33d3-a74d-4980-a08f-7b3f08e7252a" />
 
 ### Login
-<img width="1913" alt="Login Page Screenshot" src="https://github.com/user-attachments/assets/95b2e61c-b5c9-4911-a1e3-f70daabc2c59" />
+<img width="1915" alt="Login Page Image" src="https://github.com/user-attachments/assets/81faa937-5733-464a-b28f-437f1c64c4db" />

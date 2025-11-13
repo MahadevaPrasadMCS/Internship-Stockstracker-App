@@ -1,35 +1,66 @@
-import { useState, useEffect } from 'react'
-import { fetchQuote } from '../api/stockAPI'
+import { useState, useEffect, useMemo } from "react";
+import { fetchQuote } from "../api/stockAPI";
 
 /**
- * Fetch prices ONLY once after login.
- * No intervals.
+ * useStockPrices
+ * Fetches latest stock prices (MarketStack-based) and returns:
+ *  - prices: { AAPL: { currentPrice, open, high, low }, MSFT: {...} }
+ *  - isLoading: boolean
+ *  - lastUpdated: timestamp
  */
 export default function useStockPrices(symbols = []) {
-  const [prices, setPrices] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState(null)
+  const [prices, setPrices] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // 🔹 Remove duplicates + invalid symbol values
+  const cleanSymbols = useMemo(() => {
+    return [...new Set(symbols.filter((s) => s && typeof s === "string"))];
+  }, [symbols]);
 
   useEffect(() => {
-    const shouldFetch = localStorage.getItem('shouldFetchPrices') === 'true'
-    if (!shouldFetch || !symbols.length) return
+    if (!cleanSymbols.length) return;
+
+    let isMounted = true;
 
     async function loadPrices() {
       try {
-        setIsLoading(true)
-        const results = await Promise.all(symbols.map(fetchQuote))
-        setPrices(results)
-        setLastUpdated(Date.now())
+        setIsLoading(true);
+
+        // 🔸 Fetch latest MarketStack prices
+        const results = await Promise.all(cleanSymbols.map(fetchQuote));
+
+        const mapped = {};
+
+        // 🔸 Normalize into dictionary format
+        results.forEach((q) => {
+          if (!q?.symbol) return;
+
+          mapped[q.symbol] = {
+            currentPrice: q.currentPrice ?? q.close ?? null,
+            open: q.open ?? null,
+            high: q.high ?? null,
+            low: q.low ?? null,
+          };
+        });
+
+        if (!isMounted) return;
+
+        setPrices(mapped);
+        setLastUpdated(Date.now());
       } catch (err) {
-        console.error('Price fetch failed:', err.message)
+        console.error("Price fetch failed:", err);
       } finally {
-        setIsLoading(false)
-        localStorage.setItem('shouldFetchPrices', 'false')
+        if (isMounted) setIsLoading(false);
       }
     }
 
-    loadPrices()
-  }, [symbols])
+    loadPrices();
 
-  return { prices, isLoading, lastUpdated }
+    return () => {
+      isMounted = false;
+    };
+  }, [cleanSymbols]);
+
+  return { prices, isLoading, lastUpdated };
 }

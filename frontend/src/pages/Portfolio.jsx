@@ -1,116 +1,208 @@
-import React, { useState } from 'react'
-import { BarChart3, TrendingUp, FileText, Info } from 'lucide-react'
+// src/pages/Portfolio.jsx
+import React, { useState, useRef } from "react";
+import {
+  LineChart,
+  PieChart,
+  FileText,
+  Info,
+} from "lucide-react";
+
+import PriceChart from "../components/PriceChart";
+import AllocationChart from "../components/AllocationChart";
+import usePriceHistory from "../hooks/usePriceHistory";
 
 export default function Portfolio() {
-  const [toast, setToast] = useState(null)
+  const [toast, setToast] = useState(null);
+  const [activeView, setActiveView] = useState("performance"); // performance | allocation | activity
 
-  const showToast = (msg, type = 'info') => {
-    setToast({ msg, type })
-    setTimeout(() => setToast(null), 2500)
-  }
+  // Performance / P&L over time
+  const { history, loading: historyLoading } = usePriceHistory("PORTFOLIO");
 
-  const handleFeatureClick = (feature) => {
-    showToast(`🚧 ${feature} feature coming soon!`)
-  }
+  // scroll reference for analytics section
+  const analyticsRef = useRef(null);
+
+  const showToast = (msg, type = "info") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const titleMap = {
+    performance: "Performance Overview",
+    allocation: "Holdings Allocation",
+    activity: "Transaction History",
+  };
+
+  const handleViewChange = (view) => {
+    setActiveView(view);
+    showToast(`📊 Showing ${titleMap[view]}`);
+  };
+
+  /* ----------------------------------------------------------------------
+     Open Analytics Button → Auto-switch to Performance + Smooth Scroll
+  ---------------------------------------------------------------------- */
+  const openAnalytics = () => {
+    setActiveView("performance");
+    setTimeout(() => {
+      analyticsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 200);
+  };
+
+  /* UI ------------------------------------------------------------------ */
 
   return (
-    <div className="animate-fadeIn">
-      {/* Header Section */}
-      <div className="bg-white shadow-sm border border-gray-100 rounded-lg p-5 mb-6 flex justify-between items-center">
+    <div className="animate-fadeIn space-y-8">
+
+      {/* Page Header */}
+      <div className="
+        bg-white/90 dark:bg-gray-900/70 backdrop-blur-xl shadow-md 
+        border border-gray-200 dark:border-gray-800 
+        rounded-2xl p-6 flex justify-between items-center
+      ">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800">My Portfolio</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Track performance, analyze diversification, and view insights.
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Portfolio Insights
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Analyze allocation, performance & activity — all in one place.
           </p>
         </div>
+
         <button
-          onClick={() => showToast('📊 Analytics dashboard coming soon!')}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm"
+          onClick={openAnalytics}
+          className="
+            px-5 py-2.5 bg-indigo-600 text-white font-medium 
+            rounded-xl hover:bg-indigo-700 transition shadow-md active:scale-95
+          "
         >
-          View Analytics
+          Open Analytics
         </button>
       </div>
 
-      {/* Main Analytics Placeholder Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Card 1 */}
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {/* PERFORMANCE CARD */}
         <div
-          onClick={() => handleFeatureClick('Performance Overview')}
-          className="p-5 bg-white rounded-xl shadow hover:shadow-md transition border border-gray-100 cursor-pointer"
+          onClick={() => handleViewChange("performance")}
+          className={`
+            p-6 rounded-2xl shadow cursor-pointer transition border
+            ${
+              activeView === "performance"
+                ? "bg-gradient-to-br from-indigo-500/25 to-indigo-600/25 border-indigo-300 shadow-lg scale-[1.03]"
+                : "bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 border-indigo-100 dark:border-gray-700 hover:shadow-md hover:scale-[1.02]"
+            }
+          `}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Performance Overview
-            </h3>
-            <TrendingUp className="text-indigo-600" size={22} />
+            <h3 className="text-lg font-semibold">Performance Overview</h3>
+            <LineChart className="text-indigo-600" size={24} />
           </div>
-          <p className="text-sm text-gray-500 mt-2">
-            Visualize your total gains, losses, and profit trends.
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Track overall gains, losses & long-term P/L trends.
           </p>
-          <div className="mt-4 h-24 bg-gradient-to-r from-indigo-100 to-indigo-50 rounded-lg"></div>
+          <div className="mt-4 h-24 rounded-xl bg-white/50 dark:bg-gray-800/40 backdrop-blur-md" />
         </div>
 
-        {/* Card 2 */}
+        {/* ALLOCATION CARD */}
         <div
-          onClick={() => handleFeatureClick('Holdings Breakdown')}
-          className="p-5 bg-white rounded-xl shadow hover:shadow-md transition border border-gray-100 cursor-pointer"
+          onClick={() => handleViewChange("allocation")}
+          className={`
+            p-6 rounded-2xl shadow cursor-pointer transition border
+            ${
+              activeView === "allocation"
+                ? "bg-gradient-to-br from-yellow-500/25 to-yellow-600/25 border-yellow-300 shadow-lg scale-[1.03]"
+                : "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-gray-800 dark:to-gray-900 border-yellow-100 dark:border-gray-700 hover:shadow-md hover:scale-[1.02]"
+            }
+          `}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Holdings Breakdown
-            </h3>
-            <BarChart3 className="text-indigo-600" size={22} />
+            <h3 className="text-lg font-semibold">Allocation Breakdown</h3>
+            <PieChart className="text-yellow-600" size={24} />
           </div>
-          <p className="text-sm text-gray-500 mt-2">
-            See diversification by sector, stock type, and allocation weight.
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Understand diversification & exposure.
           </p>
-          <div className="mt-4 h-24 bg-gradient-to-r from-green-100 to-green-50 rounded-lg"></div>
+          <div className="mt-4 h-24 rounded-xl bg-white/50 dark:bg-gray-800/40 backdrop-blur-md" />
         </div>
 
-        {/* Card 3 */}
+        {/* ACTIVITY CARD */}
         <div
-          onClick={() => handleFeatureClick('Transaction History')}
-          className="p-5 bg-white rounded-xl shadow hover:shadow-md transition border border-gray-100 cursor-pointer"
+          onClick={() => handleViewChange("activity")}
+          className={`
+            p-6 rounded-2xl shadow cursor-pointer transition border
+            ${
+              activeView === "activity"
+                ? "bg-gradient-to-br from-green-500/25 to-green-600/25 border-green-300 shadow-lg scale-[1.03]"
+                : "bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 border-green-100 dark:border-gray-700 hover:shadow-md hover:scale-[1.02]"
+            }
+          `}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Transaction History
-            </h3>
-            <FileText className="text-indigo-600" size={22} />
+            <h3 className="text-lg font-semibold">Transaction History</h3>
+            <FileText className="text-green-600" size={24} />
           </div>
-          <p className="text-sm text-gray-500 mt-2">
-            Review all your stock purchases, edits, and sales.
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Review your buys, edits & updates.
           </p>
-          <div className="mt-4 h-24 bg-gradient-to-r from-yellow-100 to-yellow-50 rounded-lg"></div>
+          <div className="mt-4 h-24 rounded-xl bg-white/50 dark:bg-gray-800/40 backdrop-blur-md" />
         </div>
       </div>
 
-      {/* Additional Info Section */}
-      <div className="mt-8 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-2 mb-2">
-          <Info className="text-indigo-600" size={18} />
-          <h4 className="text-lg font-semibold text-gray-800">
-            Future Enhancements
-          </h4>
-        </div>
-        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-          <li>Portfolio value vs. benchmark chart</li>
-          <li>Auto-sync with brokerage APIs</li>
-          <li>Daily and weekly performance notifications</li>
-          <li>Export reports as CSV or PDF</li>
-        </ul>
+      {/* MAIN ANALYTICS SECTION */}
+      <div
+        ref={analyticsRef}
+        className="
+          bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl 
+          p-6 rounded-2xl shadow-md 
+          border border-gray-200 dark:border-gray-700 
+          space-y-4
+        "
+      >
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+          {titleMap[activeView]}
+        </h3>
+
+        {/* PERFORMANCE VIEW */}
+        {activeView === "performance" && (
+          <div className="w-full">
+            <PriceChart
+              data={history}
+              loading={historyLoading}
+              symbol="Portfolio"
+            />
+          </div>
+        )}
+
+        {/* ALLOCATION VIEW */}
+        {activeView === "allocation" && (
+          <div className="w-full">
+            <AllocationChart />
+          </div>
+        )}
+
+        {/* ACTIVITY VIEW */}
+        {activeView === "activity" && (
+          <div className="p-4 rounded-lg bg-white/60 dark:bg-gray-800/40 border dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              🚧 Transaction logs will appear here soon.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Toast Notification */}
       {toast && (
         <div
           className={`fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-white animate-fadeIn ${
-            toast.type === 'error' ? 'bg-red-600' : 'bg-indigo-600'
+            toast.type === "error" ? "bg-red-600" : "bg-indigo-600"
           }`}
         >
           {toast.msg}
         </div>
       )}
     </div>
-  )
+  );
 }

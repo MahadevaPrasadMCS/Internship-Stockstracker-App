@@ -54,7 +54,7 @@ export default function PortfolioTable({ items, onEdit, onDelete }) {
 
                   {/* Buy Price */}
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                    ₹{item.buyPrice.toFixed(2)}
+                   ₹{Number(item.buyPrice ?? 0).toFixed(2)}
                   </td>
 
                   {/* Quantity */}
@@ -67,7 +67,7 @@ export default function PortfolioTable({ items, onEdit, onDelete }) {
                     className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100"
                     title={`O:${item.open}  H:${item.high}  L:${item.low}`}
                   >
-                    {hasLive ? `₹${item.currentPrice.toFixed(2)}` : '—'}
+                    {hasLive ? `₹${Number(item.currentPrice ?? 0).toFixed(2)}` : '—'}
                   </td>
 
                   {/* P/L */}
@@ -88,7 +88,7 @@ export default function PortfolioTable({ items, onEdit, onDelete }) {
                           <TrendingDown size={14} />
                         ) : null}
                         {pl > 0 ? '+' : ''}
-                        ₹{pl.toFixed(2)}
+                        ₹{Number(pl ?? 0).toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">—</span>

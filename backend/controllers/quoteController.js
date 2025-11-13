@@ -1,6 +1,8 @@
-import yahooFinance from "yahoo-finance2";
+import { YahooFinance } from "yahoo-finance2";
 
-export const getQuote = async (req, res, next) => {
+const yahooFinance = new YahooFinance();
+
+export const getQuote = async (req, res) => {
   try {
     let { symbol } = req.query;
 
@@ -8,45 +10,53 @@ export const getQuote = async (req, res, next) => {
       return res.status(400).json({ message: "Stock symbol is required." });
     }
 
-    // Normalize input
+    // Normalize symbol
     let clean = symbol.toUpperCase().trim();
 
-    // Convert .BSE → .BO
     if (clean.endsWith(".BSE")) clean = clean.replace(".BSE", ".BO");
-
-    // Convert .NSE → .NS
     if (clean.endsWith(".NSE")) clean = clean.replace(".NSE", ".NS");
 
-    // Default exchange if none present -> assume BSE
     if (!clean.endsWith(".BO") && !clean.endsWith(".NS")) {
       clean += ".BO";
     }
 
-    // Fetch quote
-    const quote = await yahooFinance.quote(clean);
+    let quote;
 
-    if (!quote) {
-      return res.status(404).json({ message: "No data found for symbol." });
+    try {
+      // NEW correct API call
+      quote = await yahooFinance.quote(clean);
+    } catch (err) {
+      return res.status(404).json({
+        message: "Yahoo Finance could not fetch data.",
+        error: err.message,
+      });
+    }
+
+    if (!quote?.regularMarketPrice) {
+      return res.status(404).json({
+        message: "No live price found for this symbol.",
+        symbol: clean,
+      });
     }
 
     res.json({
       symbol: clean,
+      currentPrice: quote.regularMarketPrice ?? null,
       open: quote.regularMarketOpen ?? null,
       high: quote.regularMarketDayHigh ?? null,
       low: quote.regularMarketDayLow ?? null,
-      currentPrice: quote.regularMarketPrice ?? null,
       previousClose: quote.regularMarketPreviousClose ?? null,
       volume: quote.regularMarketVolume ?? null,
       currency: quote.currency ?? "INR",
       fetchedAt: new Date().toISOString(),
-      source: "yahoo-finance"
+      source: "yahoo-finance",
     });
 
   } catch (error) {
-    console.error("Yahoo Finance Quote Error:", error);
-    return res.status(500).json({
-      message: "Failed to fetch live price",
-      error: error.message
+    console.error("Quote Error:", error);
+    res.status(500).json({
+      message: "Internal server error fetching quote.",
+      error: error.message,
     });
   }
 };

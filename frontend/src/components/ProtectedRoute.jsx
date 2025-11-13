@@ -17,6 +17,7 @@ export default function ProtectedRoute({ children }) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       const isExpired = payload.exp * 1000 < Date.now()
+
       if (isExpired) {
         localStorage.removeItem('stocktrackr_token')
         setIsAuthenticated(false)
@@ -24,7 +25,7 @@ export default function ProtectedRoute({ children }) {
         setIsAuthenticated(true)
       }
     } catch (err) {
-      console.warn('Invalid or malformed token:', err)
+      console.warn('Invalid token:', err)
       localStorage.removeItem('stocktrackr_token')
       setIsAuthenticated(false)
     } finally {
@@ -32,12 +33,20 @@ export default function ProtectedRoute({ children }) {
     }
   }, [])
 
+  /* ---------- Loading Screen (Modernized) ---------- */
   if (isChecking) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600 mb-3"></div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Verifying session...</p>
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 animate-fadeIn">
+        <div className="flex flex-col items-center gap-3">
+          {/* Glowing loader ring */}
+          <div className="relative">
+            <div className="h-12 w-12 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
+            <div className="absolute inset-0 rounded-full blur-md bg-indigo-500/30 animate-pulse"></div>
+          </div>
+
+          <p className="text-gray-600 dark:text-gray-300 text-sm tracking-wide animate-fadeIn">
+            Verifying your session…
+          </p>
         </div>
       </div>
     )

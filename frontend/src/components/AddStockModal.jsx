@@ -10,20 +10,25 @@ export default function AddStockModal({ isOpen, onClose, onAdd }) {
   const [error, setError] = useState('')
   const inputRef = useRef(null)
 
-  // Handle focus + escape key + scroll lock
+  /* -----------------------------------
+     Focus, ESC support, scroll lock
+  ----------------------------------- */
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus()
+    if (isOpen) {
+      inputRef.current?.focus()
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'auto'
     }
 
-    const handleKeyDown = e => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    const handleEsc = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose])
 
+  /* -----------------------------------
+     Submit Handler
+  ----------------------------------- */
   function handleAdd(e) {
     e.preventDefault()
     setError('')
@@ -38,11 +43,13 @@ export default function AddStockModal({ isOpen, onClose, onAdd }) {
       return
     }
 
-    let cleanSymbol = symbol.toUpperCase().trim()
-    if (!cleanSymbol.endsWith('.BO') && !cleanSymbol.endsWith('.NS')) {
-      cleanSymbol += '.BO'; // default BSE exchange
-    }
+    const cleanSymbol = symbol.trim().toUpperCase()
 
+    // US ticker validation
+    if (!/^[A-Z0-9.-]{1,10}$/.test(cleanSymbol)) {
+      setError('Enter a valid US ticker (AAPL, TSLA, MSFT, BRK.B).')
+      return
+    }
 
     const newItem = {
       id: uuidv4(),
@@ -59,104 +66,147 @@ export default function AddStockModal({ isOpen, onClose, onAdd }) {
     onClose()
   }
 
+  /* -----------------------------------
+     UI
+  ----------------------------------- */
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm"
+          className="
+            fixed inset-0 z-50 flex items-center justify-center
+            bg-black/50 dark:bg-black/60 backdrop-blur-sm
+          "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
         >
           <motion.form
             onSubmit={handleAdd}
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            exit={{ opacity: 0, scale: 0.94, y: 10 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 dark:border-gray-700"
+            className="
+              w-full max-w-md p-6 rounded-2xl shadow-2xl
+              bg-gradient-to-br from-white/90 to-white/70
+              dark:from-gray-900/90 dark:to-gray-900/70
+              border border-gray-200/60 dark:border-gray-700/60
+              backdrop-blur-md
+            "
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-100">
                 <PlusCircle size={20} className="text-indigo-600" />
-                Add Stock
+                Add US Stock
               </h2>
+
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                aria-label="Close"
+                className="
+                  p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 
+                  transition
+                "
               >
-                <XCircle className="h-5 w-5 text-gray-500 dark:text-gray-300" />
+                <XCircle className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
 
-            {/* Form Fields */}
+            {/* Inputs */}
             <div className="space-y-4">
+              {/* Symbol */}
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-300 font-medium mb-1">
-                  Symbol (BSE)
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">
+                  Symbol (US)
                 </label>
                 <input
                   ref={inputRef}
                   value={symbol}
-                  onChange={e => setSymbol(e.target.value)}
-                  placeholder="e.g., RELIANCE or TCS.BSE"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-transparent dark:bg-gray-800 transition"
+                  onChange={(e) => setSymbol(e.target.value)}
+                  placeholder="AAPL, TSLA, MSFT, BRK.B"
+                  className="
+                    w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 
+                    bg-white/70 dark:bg-gray-800/60 
+                    focus:ring-2 focus:ring-indigo-500 outline-none
+                  "
                 />
               </div>
 
+              {/* Buy Price */}
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-300 font-medium mb-1">
-                  Buy Price (₹)
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">
+                  Buy Price (USD)
                 </label>
                 <input
                   type="number"
+                  step="0.01"
                   value={buyPrice}
-                  onChange={e => setBuyPrice(e.target.value)}
-                  placeholder="e.g., 2400"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-transparent dark:bg-gray-800 transition"
+                  onChange={(e) => setBuyPrice(e.target.value)}
+                  placeholder="e.g., 273.20"
+                  className="
+                    w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 
+                    bg-white/70 dark:bg-gray-800/60 
+                    focus:ring-2 focus:ring-indigo-500 outline-none
+                  "
                 />
               </div>
 
+              {/* Quantity */}
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-300 font-medium mb-1">
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">
                   Quantity
                 </label>
                 <input
                   type="number"
+                  step="1"
                   value={quantity}
-                  onChange={e => setQuantity(e.target.value)}
-                  placeholder="e.g., 10"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-transparent dark:bg-gray-800 transition"
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="e.g., 5"
+                  className="
+                    w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 
+                    bg-white/70 dark:bg-gray-800/60 
+                    focus:ring-2 focus:ring-indigo-500 outline-none
+                  "
                 />
               </div>
 
+              {/* Error Message */}
               {error && (
-                <motion.p
-                  className="text-sm text-red-600 font-medium bg-red-50 dark:bg-red-900/40 p-2 rounded"
-                  initial={{ opacity: 0, y: -4 }}
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
+                  className="
+                    text-sm text-red-600 bg-red-100/70 dark:bg-red-900/40 
+                    p-2 rounded-lg border border-red-200/30 dark:border-red-800
+                  "
                 >
                   {error}
-                </motion.p>
+                </motion.div>
               )}
             </div>
 
-            {/* Buttons */}
+            {/* Footer */}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                className="
+                  px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
+                  text-gray-700 dark:text-gray-300 
+                  hover:bg-gray-100 dark:hover:bg-gray-800 transition
+                "
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                className="
+                  px-4 py-2 rounded-lg bg-indigo-600 text-white 
+                  hover:bg-indigo-700 transition shadow-md font-medium
+                "
               >
                 Add Stock
               </button>

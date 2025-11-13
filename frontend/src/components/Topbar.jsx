@@ -1,62 +1,77 @@
-import React from 'react'
-import { Bell, LogOut, Menu } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import React from "react";
+import { LogOut, Menu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export default function Topbar({ onToggle }) {
-  const navigate = useNavigate()
+export default function Topbar({ onToggle, title = "Dashboard" }) {
+  const navigate = useNavigate();
+
+  const showToast = (msg) => {
+    const toast = document.createElement("div");
+    toast.textContent = msg;
+    toast.className =
+      "fixed bottom-6 right-6 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow-lg text-sm font-medium animate-slideInRight z-[2000]";
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 2200);
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem('stocktrackr_token')
-    localStorage.removeItem('shouldFetchPrices')
+    localStorage.removeItem("stocktrackr_token");
+    localStorage.removeItem("shouldFetchPrices");
+    showToast("👋 Logged out successfully");
 
-    const toast = document.createElement('div')
-    toast.textContent = '👋 Logged out successfully'
-    toast.className =
-      'fixed bottom-6 right-6 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow-lg text-sm font-medium animate-slideInRight'
-    document.body.appendChild(toast)
-
-    setTimeout(() => toast.remove(), 2000)
-
-    setTimeout(() => {
-      navigate('/login', { replace: true })
-    }, 600)
-  }
+    setTimeout(() => navigate("/login", { replace: true }), 600);
+  };
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm transition-all">
+    <header
+      className="
+        sticky top-0 z-40
+        flex items-center justify-between
+        px-4 py-3
+        bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10
+        backdrop-blur-xl
+        border-b border-gray-200 dark:border-gray-700
+        shadow-sm
+      "
+    >
       {/* Left Section */}
       <div className="flex items-center gap-4">
-        {/* Sidebar toggle */}
+        {/* Sidebar Toggle */}
         <button
           onClick={onToggle}
           aria-label="Toggle sidebar"
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          className="
+            p-2 rounded-lg 
+            hover:bg-gray-100 dark:hover:bg-gray-800 
+            transition active:scale-95
+          "
         >
           <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
         </button>
 
-        {/* Page title */}
-        <h1 className="text-xl font-semibold tracking-tight text-gray-800 dark:text-gray-100">
-          Dashboard
+        {/* Dynamic Page Title */}
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-800 dark:text-gray-100">
+          {title}
         </h1>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
-        {/* Notifications */}
-        <button
-          aria-label="Notifications"
-          className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-        >
-          <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
-        </button>
-
-        {/* User Avatar */}
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-sm">
+        {/* Avatar */}
+        <div className="flex items-center gap-3 pr-1">
+          <div
+            className="
+              h-9 w-9 rounded-full 
+              bg-gradient-to-br from-indigo-500 to-purple-600
+              flex items-center justify-center
+              text-white font-semibold shadow
+            "
+          >
             P
           </div>
+
+          {/* Name (Hidden on mobile for clean layout) */}
           <div className="hidden sm:flex flex-col leading-tight">
             <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
               Prasad
@@ -67,15 +82,19 @@ export default function Topbar({ onToggle }) {
           </div>
         </div>
 
-        {/* Logout */}
+        {/* Logout Button */}
         <button
           aria-label="Logout"
           onClick={handleLogout}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          className="
+            p-2 rounded-lg 
+            hover:bg-gray-100 dark:hover:bg-gray-800
+            transition active:scale-95
+          "
         >
           <LogOut className="h-5 w-5 text-gray-600 dark:text-gray-300" />
         </button>
       </div>
     </header>
-  )
+  );
 }

@@ -1,5 +1,6 @@
 import User from '../models/User.js'
 import jwt from 'jsonwebtoken'
+import { updateDailyPrice } from './priceHistoryController.js'
 
 /** Generate JWT token */
 const generateToken = (id) => {
@@ -60,6 +61,16 @@ export const loginUser = async (req, res, next) => {
         email: user.email,
       },
     })
+    setTimeout(async () => {
+  try {
+    const rows = await Portfolio.find({ user: user._id }).lean()
+    const symbols = [...new Set(rows.map(r => r.symbol).filter(Boolean))]
+    for (const s of symbols) await updateDailyPrice(s)
+    console.log('[login-fallback] updated symbols for user', user._id)
+  } catch (e) {
+    console.warn('[login-fallback] error', e.message)
+  }
+}, 100)
   } catch (err) {
     next(err)
   }

@@ -1,64 +1,46 @@
-import yahooFinance from "yahoo-finance2";
+// controllers/quoteController.js
 
-// Create instance (required for newer versions)
-const yf = yahooFinance.createYahooFinance();
+import axios from "axios";
 
 export const getQuote = async (req, res) => {
   try {
-    let { symbol } = req.query;
+    const { symbol } = req.query;
 
     if (!symbol) {
       return res.status(400).json({ message: "Stock symbol is required." });
     }
 
-    // Normalize user input
-    let clean = symbol.toUpperCase().trim();
+    const apiKey = process.env.MARKETSTACK_API_KEY;
 
-    // Convert legacy formats
-    if (clean.endsWith(".BSE")) clean = clean.replace(".BSE", ".BO");
-    if (clean.endsWith(".NSE")) clean = clean.replace(".NSE", ".NS");
+    const url = `http://api.marketstack.com/v1/eod/latest?access_key=${apiKey}&symbols=${symbol}`;
 
-    // Default to BSE
-    if (!clean.endsWith(".BO") && !clean.endsWith(".NS")) {
-      clean += ".BO";
-    }
+    const response = await axios.get(url);
+    const data = response.data;
 
-    let quote;
-
-    try {
-      // Correct Yahoo Finance API call
-      quote = await yf.quote(clean);
-    } catch (err) {
+    if (!data || !data.data || data.data.length === 0) {
       return res.status(404).json({
-        message: "Yahoo Finance could not fetch the data.",
-        error: err.message,
+        message: "No data returned for this symbol (try US stocks like AAPL, TSLA, MSFT).",
       });
     }
 
-    if (!quote || !quote.regularMarketPrice) {
-      return res.status(404).json({
-        message: "No live price available for this symbol.",
-        symbol: clean,
-      });
-    }
+    const stock = data.data[0];
 
-    res.json({
-      symbol: clean,
-      currentPrice: quote.regularMarketPrice ?? null,
-      open: quote.regularMarketOpen ?? null,
-      high: quote.regularMarketDayHigh ?? null,
-      low: quote.regularMarketDayLow ?? null,
-      previousClose: quote.regularMarketPreviousClose ?? null,
-      volume: quote.regularMarketVolume ?? null,
-      currency: quote.currency ?? "INR",
+    return res.json({
+      symbol: stock.symbol,
+      date: stock.date,
+      open: stock.open,
+      high: stock.high,
+      low: stock.low,
+      close: stock.close,
+      volume: stock.volume,
+      currency: "USD",
+      source: "marketstack",
       fetchedAt: new Date().toISOString(),
-      source: "yahoo-finance"
     });
-
   } catch (error) {
-    console.error("Quote Error:", error);
-    res.status(500).json({
-      message: "Internal server error.",
+    console.error("MarketStack Error:", error);
+    return res.status(500).json({
+      message: "Failed to fetch quote",
       error: error.message,
     });
   }
